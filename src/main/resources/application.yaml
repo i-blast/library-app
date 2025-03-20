@@ -1,0 +1,10 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: library-app
+  datasource:
+    url: jdbc:postgresql://localhost:5432/library_app_db
+    username: postgres
+    password: password
