@@ -16,6 +16,11 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage());
     }
 
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Object> handleInvalidCredentialsException(InvalidCredentialsException exc) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, exc.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGenericException(Exception exc) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Возникла непредвиденная ошибка");

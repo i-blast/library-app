@@ -26,6 +26,10 @@ dependencies {
 
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5")
 
+	implementation("io.jsonwebtoken:jjwt-api:0.12.6")
+	implementation("io.jsonwebtoken:jjwt-impl:0.12.6")
+	implementation("io.jsonwebtoken:jjwt-jackson:0.12.6") // для работы с JSON
+
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("com.h2database:h2")
 	testImplementation("org.springframework.security:spring-security-test")

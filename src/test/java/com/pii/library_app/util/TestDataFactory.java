@@ -1,5 +1,6 @@
 package com.pii.library_app.util;
 
+import com.pii.library_app.auth.dto.AuthRequest;
 import com.pii.library_app.book.model.Book;
 import com.pii.library_app.book.model.BorrowedBook;
 import com.pii.library_app.book.model.Genre;
@@ -31,4 +32,12 @@ public final class TestDataFactory {
     ) {
         return new BorrowedBook(user, book, borrowedAt);
     }
+
+    public static AuthRequest createTestAuthRequest(
+            String username,
+            String password
+    ) {
+        return new AuthRequest(username, password);
+    }
+
 }
