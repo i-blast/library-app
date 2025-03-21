@@ -40,7 +40,7 @@ class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("")
+    @DisplayName("Должен возвращать false при поиске по имени пользователя, если пользователь отсутствует в БД")
     void shouldReturnFalseIfUserDoesNotExistByUsername() {
         boolean exists = userRepository.existsByUsername("nouser");
         assertThat(exists).isFalse();
