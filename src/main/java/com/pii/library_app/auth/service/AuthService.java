@@ -47,7 +47,7 @@ public class AuthService {
     public AuthResponse login(AuthRequest request) {
         return userRepository.findByUsername(request.username())
                 .filter(user -> passwordEncoder.matches(request.password(), user.getPassword()))
-                .map(user -> new AuthResponse(jwtUtil.generateToken(user.getUsername())))
+                .map(user -> new AuthResponse(jwtUtil.generateToken(user)))
                 .orElseThrow(() -> new InvalidCredentialsException("Неверное имя пользователя или пароль"));
     }
 }

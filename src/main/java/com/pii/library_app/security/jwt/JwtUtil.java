@@ -1,5 +1,7 @@
 package com.pii.library_app.security.jwt;
 
+import com.pii.library_app.user.model.Role;
+import com.pii.library_app.user.model.User;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -7,8 +9,8 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.util.Base64;
-import java.util.Date;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtUtil {
@@ -27,9 +29,15 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(decodedKey);
     }*/
 
-    public String generateToken(String username) {
+    public String generateToken(User user) {
         return Jwts.builder()
-                .setSubject(username)
+                .setSubject(user.getUsername())
+                .claim(
+                        "roles",
+                        user.getRoles().stream()
+                                .map(Enum::name)
+                                .collect(Collectors.toList())
+                )
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(key, SignatureAlgorithm.HS256)

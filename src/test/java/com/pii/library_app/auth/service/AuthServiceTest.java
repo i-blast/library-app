@@ -35,11 +35,6 @@ class AuthServiceTest {
     @InjectMocks
     private AuthService authService;
 
-/*    @BeforeEach
-    void setUp() {
-        authService = new AuthService(userRepository, passwordEncoder);
-    }*/
-
     @Test
     @DisplayName("Должен успешно зарегистрировать нового пользователя")
     void shouldRegisterNewUserSuccessfully() {
@@ -74,15 +69,16 @@ class AuthServiceTest {
         var request = createTestAuthRequest("validUser", "correctPassword");
         var user = createTestUser("validUser", "encodedPassword");
         user.addAll(Set.of(Role.USER));
+
         when(userRepository.findByUsername("validUser")).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("correctPassword", "encodedPassword")).thenReturn(true);
-        when(jwtUtil.generateToken("validUser")).thenReturn("mockJwtToken");
+        when(jwtUtil.generateToken(user)).thenReturn("mockJwtToken");
 
         var response = authService.login(request);
         assertThat(response.message()).isEqualTo("mockJwtToken");
         verify(userRepository, times(1)).findByUsername("validUser");
         verify(passwordEncoder, times(1)).matches("correctPassword", "encodedPassword");
-        verify(jwtUtil, times(1)).generateToken("validUser");
+        verify(jwtUtil, times(1)).generateToken(user);
     }
 
     @Test
@@ -96,7 +92,7 @@ class AuthServiceTest {
                 .hasMessage("Неверное имя пользователя или пароль");
         verify(userRepository, times(1)).findByUsername("nonExistentUser");
         verify(passwordEncoder, never()).matches(anyString(), anyString());
-        verify(jwtUtil, never()).generateToken(anyString());
+        verify(jwtUtil, never()).generateToken(any(User.class));
     }
 
     @Test
@@ -113,6 +109,6 @@ class AuthServiceTest {
                 .hasMessage("Неверное имя пользователя или пароль");
         verify(userRepository, times(1)).findByUsername("validUser");
         verify(passwordEncoder, times(1)).matches("wrongPassword", "encodedPassword");
-        verify(jwtUtil, never()).generateToken(anyString());
+        verify(jwtUtil, never()).generateToken(user);
     }
 }

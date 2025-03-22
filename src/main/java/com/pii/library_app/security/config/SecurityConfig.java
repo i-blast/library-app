@@ -1,6 +1,7 @@
 package com.pii.library_app.security.config;
 
 import com.pii.library_app.security.JwtAuthenticationFilter;
+import com.pii.library_app.user.model.Role;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -15,6 +16,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -56,13 +60,19 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.POST, "/books/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/books/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/books/**").hasRole("ADMIN")
+                        .requestMatchers(manageBooksEndpoints()).hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    private static RequestMatcher manageBooksEndpoints() {
+        return new OrRequestMatcher(
+                new AntPathRequestMatcher("/books/**", HttpMethod.POST.name()),
+                new AntPathRequestMatcher("/books/**", HttpMethod.PUT.name()),
+                new AntPathRequestMatcher("/books/**", HttpMethod.DELETE.name())
+        );
     }
 }

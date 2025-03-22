@@ -1,5 +1,6 @@
 package com.pii.library_app.security;
 
+import com.pii.library_app.user.model.Role;
 import com.pii.library_app.user.repo.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,7 +24,7 @@ public class LibraryUserDetailsService implements UserDetailsService {
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getUsername())
                 .password(user.getPassword())
-                .roles(user.getRoles().stream().map(Enum::name).toArray(String[]::new))
+                .roles(Role.roles())
                 .build();
     }
 }

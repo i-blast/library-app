@@ -16,8 +16,8 @@
         </encoder>
     </appender>
 
-    <logger name="org.hibernate.SQL" level="DEBUG"/>
-    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
+<!--    <logger name="org.hibernate.SQL" level="DEBUG"/>-->
+<!--    <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>-->
 
     <logger name="com.pii.library_app" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT"/>
