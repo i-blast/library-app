@@ -3,8 +3,10 @@ package com.pii.library_app.book.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pii.library_app.book.dto.SearchBookFilterDto;
 import com.pii.library_app.book.dto.SearchBookResponseDto;
+import com.pii.library_app.book.exception.BookNotAvailableException;
 import com.pii.library_app.book.exception.BookNotFoundException;
 import com.pii.library_app.book.model.Book;
+import com.pii.library_app.book.model.BorrowedBook;
 import com.pii.library_app.book.model.Genre;
 import com.pii.library_app.book.service.BookService;
 import com.pii.library_app.security.JwtAuthenticationFilter;
@@ -18,6 +20,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.pii.library_app.util.TestDataFactory.createTestBook;
@@ -25,6 +28,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -42,11 +46,16 @@ public class BookControllerTest {
     private ObjectMapper objectMapper;
 
     private Book book;
+    private BorrowedBook borrowedBook;
 
     @BeforeEach
     void setUp() {
         book = createTestBook("1984", "George Orwell", Genre.DYSTOPIAN);
         book.setId(1L);
+        borrowedBook = new BorrowedBook();
+        borrowedBook.setId(1L);
+        borrowedBook.setBook(book);
+        borrowedBook.setBorrowedAt(LocalDateTime.now());
     }
 
     @Test
@@ -98,20 +107,6 @@ public class BookControllerTest {
                 .andExpect(status().isForbidden());
         verify(bookService, never()).createBook(any(Book.class));
     }
-
-/*    @Test
-    @DisplayName("Получение списка всех книг - успешный сценарий")
-    void shouldGetAllBooks() throws Exception {
-        var books = List.of(book);
-        when(bookService.getAllBooks()).thenReturn(books);
-
-        mockMvc.perform(get("/books"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value("1984"))
-                .andExpect(jsonPath("$[0].author").value("George Orwell"));
-
-        verify(bookService, times(1)).getAllBooks();
-    }*/
 
     @Test
     @DisplayName("Обновление книги - книга не найдена")
@@ -200,4 +195,66 @@ public class BookControllerTest {
         verify(bookService, times(1)).searchBooks(any(SearchBookFilterDto.class));
     }
 
+    @Test
+    @DisplayName("Бронирование книги - успешный сценарий")
+    void shouldBorrowBookSuccessfully() throws Exception {
+        when(bookService.borrowBook(eq(1L), any(String.class))).thenReturn(borrowedBook);
+
+        mockMvc.perform(post("/books/1/borrow")
+                        .principal(() -> "testUser"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.book.title").value("1984"))
+                .andExpect(jsonPath("$.book.author").value("George Orwell"));
+        verify(bookService, times(1)).borrowBook(eq(1L), eq("testUser"));
+    }
+
+    @Test
+    @DisplayName("Бронирование книги - книга не найдена")
+    void shouldReturnNotFoundWhenBookNotFound() throws Exception {
+        when(bookService.borrowBook(eq(1L), any(String.class)))
+                .thenThrow(new BookNotFoundException(1L));
+
+        mockMvc.perform(post("/books/1/borrow")
+                        .principal(() -> "testUser"))
+                .andExpect(status().isNotFound());
+        verify(bookService, times(1)).borrowBook(eq(1L), eq("testUser"));
+    }
+
+    @Test
+    @DisplayName("Бронирование книги - книга недоступна")
+    void shouldReturnBadRequestWhenBookNotAvailable() throws Exception {
+        when(bookService.borrowBook(eq(1L), any(String.class)))
+                .thenThrow(new BookNotAvailableException(1L));
+
+        mockMvc.perform(post("/books/1/borrow")
+                        .principal(() -> "testUser"))
+                .andExpect(status().isConflict());
+        verify(bookService, times(1)).borrowBook(eq(1L), eq("testUser"));
+    }
+
+    @Test
+    @DisplayName("Возврат книги - успешный сценарий")
+    void shouldReturnBookSuccessfully() throws Exception {
+        when(bookService.returnBook(eq(1L))).thenReturn(borrowedBook);
+
+        mockMvc.perform(post("/books/1/return").principal(() -> "testUser"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.book.title").value("1984"))
+                .andExpect(jsonPath("$.book.author").value("George Orwell"));
+        verify(bookService, times(1)).returnBook(eq(1L));
+    }
+
+    @Test
+    @DisplayName("Возврат книги - бронирование не найдено")
+    void shouldReturnNotFoundWhenBorrowedBookNotFound() throws Exception {
+        when(bookService.returnBook(eq(1L)))
+                .thenThrow(new BookNotFoundException(1L));
+
+        mockMvc.perform(post("/books/{id}/return", 1L).principal(() -> "testUser"))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+        verify(bookService, times(1)).returnBook(eq(1L));
+    }
 }

@@ -3,6 +3,7 @@ package com.pii.library_app.book.controller;
 import com.pii.library_app.book.dto.SearchBookFilterDto;
 import com.pii.library_app.book.dto.SearchBookResponseDto;
 import com.pii.library_app.book.model.Book;
+import com.pii.library_app.book.model.BorrowedBook;
 import com.pii.library_app.book.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -31,19 +32,6 @@ public class BookController {
     public BookController(BookService bookService) {
         this.bookService = bookService;
     }
-
-/*    @GetMapping
-    @Operation(
-            summary = "Получение списка всех книг",
-            description = "Возвращает список всех книг в библиотеке"
-    )
-    @ApiResponse(
-            responseCode = "200", description = "Успешное получение списка книг",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = Book.class))
-    )
-    public ResponseEntity<List<Book>> getAllBooks() {
-        return ResponseEntity.ok(bookService.getAllBooks());
-    }*/
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -106,6 +94,7 @@ public class BookController {
     }
 
     @PostMapping("/search")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @Operation(
             summary = "Поиск книг",
             description = "Поиск книг по названию, автору или жанру"
@@ -129,5 +118,52 @@ public class BookController {
                 filter
         );
         return ResponseEntity.ok(bookService.searchBooks(filter));
+    }
+
+    @PostMapping("/{bookId}/borrow")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @Operation(
+            summary = "Забронировать книгу",
+            description = "Позволяет пользователю забронировать книгу по её ID."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Книга успешно забронирована",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = BorrowedBook.class))
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Книга не найдена"
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "Книга недоступна для бронирования"
+    )
+    public ResponseEntity<BorrowedBook> borrowBook(
+            @PathVariable Long bookId,
+            Principal principal
+    ) {
+        var borrowedBook = bookService.borrowBook(bookId, principal.getName());
+        return ResponseEntity.ok(borrowedBook);
+    }
+
+    @PostMapping("/{bookId}/return")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(
+            summary = "Вернуть книгу",
+            description = "Позволяет пользователю вернуть книгу по её ID."
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Книга успешно возвращена",
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = BorrowedBook.class))
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Бронирование не найдено"
+    )
+    public ResponseEntity<BorrowedBook> returnBook(@PathVariable Long bookId) {
+        var returnedBook = bookService.returnBook(bookId);
+        return ResponseEntity.ok(returnedBook);
     }
 }

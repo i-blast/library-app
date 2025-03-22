@@ -1,10 +1,14 @@
 package com.pii.library_app.book.service;
 
 import com.pii.library_app.book.dto.SearchBookFilterDto;
+import com.pii.library_app.book.exception.BookNotAvailableException;
 import com.pii.library_app.book.exception.BookNotFoundException;
 import com.pii.library_app.book.model.Book;
+import com.pii.library_app.book.model.BorrowedBook;
 import com.pii.library_app.book.model.Genre;
 import com.pii.library_app.book.repo.BookRepository;
+import com.pii.library_app.book.repo.BorrowedBookRepository;
+import com.pii.library_app.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,10 +17,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static com.pii.library_app.util.TestDataFactory.createTestBook;
+import static com.pii.library_app.util.TestDataFactory.createTestUser;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
@@ -25,9 +31,12 @@ public class BookServiceTest {
 
     @Mock
     private BookRepository bookRepository;
-
+    @Mock
+    private UserService userService;
     @InjectMocks
     private BookService bookService;
+    @Mock
+    private BorrowedBookRepository borrowedBookRepository;
 
     @BeforeEach
     void setUp() {
@@ -92,21 +101,6 @@ public class BookServiceTest {
         assertThat(exception.getMessage()).isEqualTo("Книга с ID 1 не найдена");
     }
 
-/*    @Test
-    @DisplayName("Получение списка всех книг - успешный сценарий")
-    void shouldGetAllBooks() {
-        var book1 = createTestBook("451 градус по фаренгейту", "Рэй Брэдбери", Genre.DYSTOPIAN);
-        var book2 = createTestBook("1984", "Джордж Оруэлл", Genre.DYSTOPIAN);
-        var books = List.of(book1, book2);
-        when(bookRepository.findAll()).thenReturn(books);
-
-        var result = bookService.getAllBooks();
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).getTitle()).isEqualTo("451 градус по фаренгейту");
-        assertThat(result.get(1).getTitle()).isEqualTo("1984");
-        verify(bookRepository, times(1)).findAll();
-    }*/
-
     @Test
     @DisplayName("Поиск книг по названию - успешный сценарий")
     void shouldSearchBooksByTitle() {
@@ -161,5 +155,89 @@ public class BookServiceTest {
         var result = bookService.searchBooks(filter);
         assertThat(result.totalCount()).isEqualTo(2L);
         verify(bookRepository, times(1)).findAll();
+    }
+
+    @Test
+    @DisplayName("Бронирование книги - успешный сценарий")
+    void shouldBorrowBookSuccessfully() {
+        Long bookId = 1L;
+        String username = "testUser";
+        Book book = createTestBook("1984", "George Orwell", Genre.DYSTOPIAN);
+        book.setId(bookId);
+        book.setAvailable(true);
+        var user = createTestUser(username, "password");
+        user.setId(1L);
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(userService.findByUsername(username)).thenReturn(user);
+        when(borrowedBookRepository.save(any(BorrowedBook.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var borrowedBook = bookService.borrowBook(bookId, username);
+        assertThat(borrowedBook).isNotNull();
+        assertThat(borrowedBook.getBook()).isEqualTo(book);
+        assertThat(borrowedBook.getUser()).isEqualTo(user);
+        assertThat(borrowedBook.getBorrowedAt()).isNotNull();
+        assertThat(book.isAvailable()).isFalse();
+        verify(bookRepository, times(1)).save(book);
+        verify(borrowedBookRepository, times(1)).save(any(BorrowedBook.class));
+    }
+
+    @Test
+    @DisplayName("Бронирование книги - книга недоступна")
+    void shouldThrowExceptionWhenBookIsNotAvailable() {
+        Long bookId = 1L;
+        String username = "testUser";
+        Book book = createTestBook("1984", "George Orwell", Genre.DYSTOPIAN);
+        book.setId(bookId);
+        book.setAvailable(false);
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+
+        assertThrows(BookNotAvailableException.class, () -> bookService.borrowBook(bookId, username));
+        verify(bookRepository, never()).save(any(Book.class));
+        verify(borrowedBookRepository, never()).save(any(BorrowedBook.class));
+    }
+
+    @Test
+    @DisplayName("Бронирование книги - книга не найдена")
+    void shouldThrowExceptionWhenBookNotFound() {
+        Long bookId = 1L;
+        String username = "testUser";
+        when(bookRepository.findById(bookId)).thenReturn(Optional.empty());
+        assertThrows(BookNotFoundException.class, () -> bookService.borrowBook(bookId, username));
+        verify(bookRepository, never()).save(any(Book.class));
+        verify(borrowedBookRepository, never()).save(any(BorrowedBook.class));
+    }
+
+    @Test
+    @DisplayName("Возврат книги - успешный сценарий")
+    void shouldReturnBookSuccessfully() {
+        Long borrowedBookId = 1L;
+        Book book = createTestBook("1984", "George Orwell", Genre.DYSTOPIAN);
+        book.setId(1L);
+        book.setAvailable(false);
+        var borrowedBook = new BorrowedBook();
+        borrowedBook.setId(borrowedBookId);
+        borrowedBook.setBook(book);
+        borrowedBook.setBorrowedAt(LocalDateTime.now());
+        when(borrowedBookRepository.findById(borrowedBookId)).thenReturn(Optional.of(borrowedBook));
+        when(bookRepository.save(any(Book.class))).thenReturn(book);
+        when(borrowedBookRepository.save(any(BorrowedBook.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        BorrowedBook returnedBook = bookService.returnBook(borrowedBookId);
+        assertThat(returnedBook).isNotNull();
+        assertThat(returnedBook.getReturnedAt()).isNotNull();
+        assertThat(book.isAvailable()).isTrue();
+        verify(bookRepository, times(1)).save(book);
+        verify(borrowedBookRepository, times(1)).save(borrowedBook);
+    }
+
+    @Test
+    @DisplayName("Возврат книги - бронирование не найдено")
+    void shouldThrowExceptionWhenBorrowedBookNotFound() {
+        Long borrowedBookId = 1L;
+        when(borrowedBookRepository.findById(borrowedBookId)).thenReturn(Optional.empty());
+
+        assertThrows(BookNotFoundException.class, () -> bookService.returnBook(borrowedBookId));
+        verify(bookRepository, never()).save(any(Book.class));
+        verify(borrowedBookRepository, never()).save(any(BorrowedBook.class));
     }
 }

@@ -39,6 +39,11 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.NOT_FOUND, exc.getMessage());
     }
 
+    @ExceptionHandler(BookNotAvailableException.class)
+    public ResponseEntity<Object> handleBookNotAvailableException(BookNotAvailableException exc) {
+        return buildErrorResponse(HttpStatus.CONFLICT, exc.getMessage());
+    }
+
     private ResponseEntity<Object> buildErrorResponse(HttpStatus status, String message) {
         var body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
