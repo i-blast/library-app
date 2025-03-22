@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.pii.library_app.util.TestDataFactory.createTestBook;
+import static com.pii.library_app.util.TestDataFactory.createTestUser;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -55,7 +56,9 @@ public class BookControllerTest {
         borrowedBook = new BorrowedBook();
         borrowedBook.setId(1L);
         borrowedBook.setBook(book);
-        borrowedBook.setBorrowedAt(LocalDateTime.now());
+        borrowedBook.setBorrowedAt(LocalDateTime.of(2025, 3, 20, 12, 0));
+        var user = createTestUser("testUser", "password");
+        borrowedBook.setUser(user);
     }
 
     @Test
@@ -200,12 +203,13 @@ public class BookControllerTest {
     void shouldBorrowBookSuccessfully() throws Exception {
         when(bookService.borrowBook(eq(1L), any(String.class))).thenReturn(borrowedBook);
 
-        mockMvc.perform(post("/books/1/borrow")
-                        .principal(() -> "testUser"))
+        mockMvc.perform(post("/books/1/borrow").principal(() -> "testUser"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.book.title").value("1984"))
-                .andExpect(jsonPath("$.book.author").value("George Orwell"));
+                .andExpect(jsonPath("$.bookTitle").value("1984"))
+                .andExpect(jsonPath("$.username").value("testUser"))
+                .andExpect(jsonPath("$.borrowedAt").value("2025-03-20T12:00:00"))
+                .andExpect(jsonPath("$.returnedAt").doesNotExist());
         verify(bookService, times(1)).borrowBook(eq(1L), eq("testUser"));
     }
 
@@ -236,13 +240,17 @@ public class BookControllerTest {
     @Test
     @DisplayName("Возврат книги - успешный сценарий")
     void shouldReturnBookSuccessfully() throws Exception {
+        borrowedBook.setReturnedAt(LocalDateTime.of(2025, 3, 22, 15, 30));
         when(bookService.returnBook(eq(1L))).thenReturn(borrowedBook);
 
         mockMvc.perform(post("/books/1/return").principal(() -> "testUser"))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.book.title").value("1984"))
-                .andExpect(jsonPath("$.book.author").value("George Orwell"));
+                .andExpect(jsonPath("$.bookTitle").value("1984"))
+                .andExpect(jsonPath("$.username").value("testUser"))
+                .andExpect(jsonPath("$.borrowedAt").value("2025-03-20T12:00:00"))
+                .andExpect(jsonPath("$.returnedAt").value("2025-03-22T15:30:00"));
         verify(bookService, times(1)).returnBook(eq(1L));
     }
 

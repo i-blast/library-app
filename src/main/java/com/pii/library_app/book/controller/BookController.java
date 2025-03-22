@@ -1,5 +1,7 @@
 package com.pii.library_app.book.controller;
 
+import com.pii.library_app.book.dto.BorrowedBookDto;
+import com.pii.library_app.book.dto.ReturnedBookDto;
 import com.pii.library_app.book.dto.SearchBookFilterDto;
 import com.pii.library_app.book.dto.SearchBookResponseDto;
 import com.pii.library_app.book.model.Book;
@@ -124,12 +126,12 @@ public class BookController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @Operation(
             summary = "Забронировать книгу",
-            description = "Позволяет пользователю забронировать книгу по её ID."
+            description = "Позволяет пользователю забронировать книгу по её ID"
     )
     @ApiResponse(
             responseCode = "200",
             description = "Книга успешно забронирована",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = BorrowedBook.class))
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = BorrowedBookDto.class))
     )
     @ApiResponse(
             responseCode = "404",
@@ -139,31 +141,31 @@ public class BookController {
             responseCode = "400",
             description = "Книга недоступна для бронирования"
     )
-    public ResponseEntity<BorrowedBook> borrowBook(
+    public ResponseEntity<BorrowedBookDto> borrowBook(
             @PathVariable Long bookId,
             Principal principal
     ) {
         var borrowedBook = bookService.borrowBook(bookId, principal.getName());
-        return ResponseEntity.ok(borrowedBook);
+        return ResponseEntity.ok(BorrowedBookDto.fromEntity(borrowedBook));
     }
 
     @PostMapping("/{bookId}/return")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @Operation(
             summary = "Вернуть книгу",
-            description = "Позволяет пользователю вернуть книгу по её ID."
+            description = "Позволяет пользователю вернуть книгу по её ID"
     )
     @ApiResponse(
             responseCode = "200",
             description = "Книга успешно возвращена",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = BorrowedBook.class))
+            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ReturnedBookDto.class))
     )
     @ApiResponse(
             responseCode = "404",
             description = "Бронирование не найдено"
     )
-    public ResponseEntity<BorrowedBook> returnBook(@PathVariable Long bookId) {
+    public ResponseEntity<ReturnedBookDto> returnBook(@PathVariable Long bookId) {
         var returnedBook = bookService.returnBook(bookId);
-        return ResponseEntity.ok(returnedBook);
+        return ResponseEntity.ok(ReturnedBookDto.fromEntity(returnedBook));
     }
 }

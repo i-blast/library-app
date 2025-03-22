@@ -123,7 +123,7 @@ public class BookService {
 
         borrowedBook.setReturnedAt(LocalDateTime.now());
         BorrowedBook saved = borrowedBookRepository.save(borrowedBook);
-        LOG.info("➤➤➤➤➤➤➤ Книга '{}' возвращается возвращена в библиотеку", book.getId());
+        LOG.info("➤➤➤➤➤➤➤ Книга '{}' возвращается возвращена в библиотеку", book.getId()); // TODO
         return saved;
     }
 }
