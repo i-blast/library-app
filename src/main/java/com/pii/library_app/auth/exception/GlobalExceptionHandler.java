@@ -1,6 +1,7 @@
 package com.pii.library_app.auth.exception;
 
 import com.pii.library_app.book.exception.BookNotAvailableException;
+import com.pii.library_app.book.exception.BookNotBorrowedException;
 import com.pii.library_app.book.exception.BookNotFoundException;
 import com.pii.library_app.user.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -42,6 +43,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BookNotAvailableException.class)
     public ResponseEntity<Object> handleBookNotAvailableException(BookNotAvailableException exc) {
         return buildErrorResponse(HttpStatus.CONFLICT, exc.getMessage());
+    }
+
+    @ExceptionHandler(BookNotBorrowedException.class)
+    public ResponseEntity<Object> handleBookNotBorrowedException(BookNotBorrowedException exc) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, exc.getMessage());
     }
 
     private ResponseEntity<Object> buildErrorResponse(HttpStatus status, String message) {

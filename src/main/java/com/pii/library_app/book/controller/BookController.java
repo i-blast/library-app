@@ -5,7 +5,6 @@ import com.pii.library_app.book.dto.ReturnedBookDto;
 import com.pii.library_app.book.dto.SearchBookFilterDto;
 import com.pii.library_app.book.dto.SearchBookResponseDto;
 import com.pii.library_app.book.model.Book;
-import com.pii.library_app.book.model.BorrowedBook;
 import com.pii.library_app.book.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -164,8 +163,11 @@ public class BookController {
             responseCode = "404",
             description = "Бронирование не найдено"
     )
-    public ResponseEntity<ReturnedBookDto> returnBook(@PathVariable Long bookId) {
-        var returnedBook = bookService.returnBook(bookId);
+    public ResponseEntity<ReturnedBookDto> returnBook(
+            @PathVariable Long bookId,
+            Principal principal
+    ) {
+        var returnedBook = bookService.returnBook(bookId, principal.getName());
         return ResponseEntity.ok(ReturnedBookDto.fromEntity(returnedBook));
     }
 }

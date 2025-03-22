@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pii.library_app.book.dto.SearchBookFilterDto;
 import com.pii.library_app.book.dto.SearchBookResponseDto;
 import com.pii.library_app.book.exception.BookNotAvailableException;
+import com.pii.library_app.book.exception.BookNotBorrowedException;
 import com.pii.library_app.book.exception.BookNotFoundException;
 import com.pii.library_app.book.model.Book;
 import com.pii.library_app.book.model.BorrowedBook;
@@ -214,15 +215,17 @@ public class BookControllerTest {
     }
 
     @Test
-    @DisplayName("Бронирование книги - книга не найдена")
+    @DisplayName("Возврат книги - книга не найдена")
     void shouldReturnNotFoundWhenBookNotFound() throws Exception {
-        when(bookService.borrowBook(eq(1L), any(String.class)))
-                .thenThrow(new BookNotFoundException(1L));
+        var bookId = 1L;
+        var username = "testUser";
+        when(bookService.returnBook(eq(bookId), eq(username)))
+                .thenThrow(new BookNotFoundException(bookId));
 
-        mockMvc.perform(post("/books/1/borrow")
-                        .principal(() -> "testUser"))
+        mockMvc.perform(post("/books/{bookId}/return", bookId).principal(() -> username))
+                .andDo(print())
                 .andExpect(status().isNotFound());
-        verify(bookService, times(1)).borrowBook(eq(1L), eq("testUser"));
+        verify(bookService, times(1)).returnBook(eq(bookId), eq(username));
     }
 
     @Test
@@ -241,28 +244,39 @@ public class BookControllerTest {
     @DisplayName("Возврат книги - успешный сценарий")
     void shouldReturnBookSuccessfully() throws Exception {
         borrowedBook.setReturnedAt(LocalDateTime.of(2025, 3, 22, 15, 30));
-        when(bookService.returnBook(eq(1L))).thenReturn(borrowedBook);
+        when(bookService.returnBook(eq(1L), eq("testUser"))).thenReturn(borrowedBook);
 
         mockMvc.perform(post("/books/1/return").principal(() -> "testUser"))
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.bookTitle").value("1984"))
                 .andExpect(jsonPath("$.username").value("testUser"))
                 .andExpect(jsonPath("$.borrowedAt").value("2025-03-20T12:00:00"))
                 .andExpect(jsonPath("$.returnedAt").value("2025-03-22T15:30:00"));
-        verify(bookService, times(1)).returnBook(eq(1L));
+        verify(bookService, times(1)).returnBook(eq(1L), eq("testUser"));
     }
 
     @Test
     @DisplayName("Возврат книги - бронирование не найдено")
     void shouldReturnNotFoundWhenBorrowedBookNotFound() throws Exception {
-        when(bookService.returnBook(eq(1L)))
+        when(bookService.returnBook(eq(1L), eq("testUser")))
                 .thenThrow(new BookNotFoundException(1L));
 
         mockMvc.perform(post("/books/{id}/return", 1L).principal(() -> "testUser"))
-                .andDo(print())
                 .andExpect(status().isNotFound());
-        verify(bookService, times(1)).returnBook(eq(1L));
+        verify(bookService, times(1)).returnBook(eq(1L), eq("testUser"));
     }
+
+    @Test
+    @DisplayName("Возврат книги - книга не была забронирована")
+    void shouldReturnBadRequestWhenBookNotBorrowed() throws Exception {
+        var bookId = 1L;
+        var username = "testUser";
+        when(bookService.returnBook(eq(bookId), eq(username))).thenThrow(new BookNotBorrowedException(bookId));
+
+        mockMvc.perform(post("/books/{bookId}/return", bookId).principal(() -> username))
+                .andExpect(status().isBadRequest());
+        verify(bookService, times(1)).returnBook(eq(bookId), eq(username));
+    }
+
 }

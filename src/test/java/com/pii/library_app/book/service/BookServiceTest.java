@@ -2,6 +2,7 @@ package com.pii.library_app.book.service;
 
 import com.pii.library_app.book.dto.SearchBookFilterDto;
 import com.pii.library_app.book.exception.BookNotAvailableException;
+import com.pii.library_app.book.exception.BookNotBorrowedException;
 import com.pii.library_app.book.exception.BookNotFoundException;
 import com.pii.library_app.book.model.Book;
 import com.pii.library_app.book.model.BorrowedBook;
@@ -16,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -197,47 +199,79 @@ public class BookServiceTest {
     }
 
     @Test
-    @DisplayName("Бронирование книги - книга не найдена")
+    @DisplayName("Возврат книги - книга не найдена")
     void shouldThrowExceptionWhenBookNotFound() {
-        Long bookId = 1L;
-        String username = "testUser";
+        var bookId = 1L;
+        var username = "testUser";
         when(bookRepository.findById(bookId)).thenReturn(Optional.empty());
-        assertThrows(BookNotFoundException.class, () -> bookService.borrowBook(bookId, username));
-        verify(bookRepository, never()).save(any(Book.class));
-        verify(borrowedBookRepository, never()).save(any(BorrowedBook.class));
+        assertThrows(BookNotFoundException.class, () -> bookService.returnBook(bookId, username));
+        verify(bookRepository, times(1)).findById(bookId);
+        verify(userService, never()).findByUsername(anyString());
+        verify(borrowedBookRepository, never()).findByUserAndBookAndReturnedAtIsNull(any(), any());
     }
 
     @Test
     @DisplayName("Возврат книги - успешный сценарий")
     void shouldReturnBookSuccessfully() {
-        Long borrowedBookId = 1L;
-        Book book = createTestBook("1984", "George Orwell", Genre.DYSTOPIAN);
+        var book = createTestBook("1984", "George Orwell", Genre.DYSTOPIAN);
         book.setId(1L);
         book.setAvailable(false);
+        var user = createTestUser("testUser", "password");
         var borrowedBook = new BorrowedBook();
-        borrowedBook.setId(borrowedBookId);
+        borrowedBook.setId(1L);
         borrowedBook.setBook(book);
-        borrowedBook.setBorrowedAt(LocalDateTime.now());
-        when(borrowedBookRepository.findById(borrowedBookId)).thenReturn(Optional.of(borrowedBook));
-        when(bookRepository.save(any(Book.class))).thenReturn(book);
-        when(borrowedBookRepository.save(any(BorrowedBook.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        borrowedBook.setUser(user);
+        borrowedBook.setBorrowedAt(LocalDateTime.of(2025, 3, 20, 12, 0));
+        when(bookRepository.findById(1L)).thenReturn(Optional.of(book));
+        when(userService.findByUsername("testUser")).thenReturn(user);
+        when(borrowedBookRepository.findByUserAndBookAndReturnedAtIsNull(user, book))
+                .thenReturn(Optional.of(borrowedBook));
+        when(bookRepository.save(book)).thenReturn(book);
+        when(borrowedBookRepository.save(borrowedBook)).thenReturn(borrowedBook);
 
-        BorrowedBook returnedBook = bookService.returnBook(borrowedBookId);
+        var returnedBook = bookService.returnBook(1L, "testUser");
         assertThat(returnedBook).isNotNull();
         assertThat(returnedBook.getReturnedAt()).isNotNull();
         assertThat(book.isAvailable()).isTrue();
+        verify(bookRepository, times(1)).findById(1L);
+        verify(userService, times(1)).findByUsername("testUser");
+        verify(borrowedBookRepository, times(1)).findByUserAndBookAndReturnedAtIsNull(user, book);
         verify(bookRepository, times(1)).save(book);
         verify(borrowedBookRepository, times(1)).save(borrowedBook);
     }
 
     @Test
-    @DisplayName("Возврат книги - бронирование не найдено")
-    void shouldThrowExceptionWhenBorrowedBookNotFound() {
-        Long borrowedBookId = 1L;
-        when(borrowedBookRepository.findById(borrowedBookId)).thenReturn(Optional.empty());
+    @DisplayName("Возврат книги - книга не была забронирована")
+    void shouldThrowExceptionWhenBookNotBorrowed() {
+        var bookId = 1L;
+        var username = "testUser";
+        var book = createTestBook("1984", "George Orwell", Genre.DYSTOPIAN);
+        book.setId(bookId);
+        var user = createTestUser(username, "password");
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(userService.findByUsername(username)).thenReturn(user);
+        when(borrowedBookRepository.findByUserAndBookAndReturnedAtIsNull(user, book))
+                .thenReturn(Optional.empty());
 
-        assertThrows(BookNotFoundException.class, () -> bookService.returnBook(borrowedBookId));
-        verify(bookRepository, never()).save(any(Book.class));
-        verify(borrowedBookRepository, never()).save(any(BorrowedBook.class));
+        assertThrows(BookNotBorrowedException.class, () -> bookService.returnBook(bookId, username));
+        verify(bookRepository, times(1)).findById(bookId);
+        verify(userService, times(1)).findByUsername(username);
+        verify(borrowedBookRepository, times(1)).findByUserAndBookAndReturnedAtIsNull(user, book);
+    }
+
+    @Test
+    @DisplayName("Возврат книги - пользователь не найден")
+    void shouldThrowExceptionWhenUserNotFound() {
+        var bookId = 1L;
+        var username = "testUser";
+        var book = createTestBook("1984", "George Orwell", Genre.DYSTOPIAN);
+        book.setId(bookId);
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
+        when(userService.findByUsername(username)).thenThrow(new UsernameNotFoundException("User not found"));
+
+        assertThrows(UsernameNotFoundException.class, () -> bookService.returnBook(bookId, username));
+        verify(bookRepository, times(1)).findById(bookId);
+        verify(userService, times(1)).findByUsername(username);
+        verify(borrowedBookRepository, never()).findByUserAndBookAndReturnedAtIsNull(any(), any());
     }
 }

@@ -3,13 +3,13 @@ package com.pii.library_app.book.service;
 import com.pii.library_app.book.dto.SearchBookFilterDto;
 import com.pii.library_app.book.dto.SearchBookResponseDto;
 import com.pii.library_app.book.exception.BookNotAvailableException;
+import com.pii.library_app.book.exception.BookNotBorrowedException;
 import com.pii.library_app.book.exception.BookNotFoundException;
 import com.pii.library_app.book.model.Book;
 import com.pii.library_app.book.model.BorrowedBook;
 import com.pii.library_app.book.repo.BookRepository;
 import com.pii.library_app.book.repo.BorrowedBookRepository;
 import com.pii.library_app.user.service.UserService;
-import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
@@ -113,17 +113,19 @@ public class BookService {
     }
 
     @Transactional
-    public BorrowedBook returnBook(Long borrowedBookId) {
-        var borrowedBook = borrowedBookRepository.findById(borrowedBookId)
-                .orElseThrow(() -> new BookNotFoundException(borrowedBookId));
+    public BorrowedBook returnBook(Long bookId, String username) {
+        var book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new BookNotFoundException(bookId));
+        var user = userService.findByUsername(username);
+        var borrowedBook = borrowedBookRepository.findByUserAndBookAndReturnedAtIsNull(user, book)
+                .orElseThrow(() -> new BookNotBorrowedException(bookId));
 
-        var book = borrowedBook.getBook();
         book.setAvailable(true);
         bookRepository.save(book);
 
         borrowedBook.setReturnedAt(LocalDateTime.now());
-        BorrowedBook saved = borrowedBookRepository.save(borrowedBook);
-        LOG.info("➤➤➤➤➤➤➤ Книга '{}' возвращается возвращена в библиотеку", book.getId()); // TODO
+        var saved = borrowedBookRepository.save(borrowedBook);
+        LOG.info("➤➤➤➤➤➤➤ Книга '{}' возвращена в библиотеку пользователем '{}'", book.getId(), username);
         return saved;
     }
 }
