@@ -1,4 +1,4 @@
-package com.pii.library_app.user.repo;
+package com.pii.library_app.book.repo;
 
 import com.pii.library_app.book.model.Book;
 import com.pii.library_app.book.model.BorrowedBook;

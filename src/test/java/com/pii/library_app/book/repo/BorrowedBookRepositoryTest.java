@@ -3,7 +3,6 @@ package com.pii.library_app.book.repo;
 import com.pii.library_app.book.model.BorrowedBook;
 import com.pii.library_app.book.model.Genre;
 import com.pii.library_app.user.model.Role;
-import com.pii.library_app.user.repo.BorrowedBookRepository;
 import com.pii.library_app.user.repo.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
