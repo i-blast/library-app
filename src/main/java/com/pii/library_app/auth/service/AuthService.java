@@ -7,7 +7,7 @@ import com.pii.library_app.auth.exception.UsernameAlreadyExistsException;
 import com.pii.library_app.security.jwt.JwtUtil;
 import com.pii.library_app.user.model.Role;
 import com.pii.library_app.user.model.User;
-import com.pii.library_app.user.repo.UserRepository;
+import com.pii.library_app.user.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,22 +16,22 @@ import java.util.Set;
 @Service
 public class AuthService {
 
-    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final UserService userService;
 
     public AuthService(
             JwtUtil jwtUtil,
-            UserRepository userRepository,
+            UserService userService,
             PasswordEncoder passwordEncoder
     ) {
-        this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.userService = userService;
     }
 
     public AuthResponse register(AuthRequest request) {
-        if (userRepository.existsByUsername(request.username())) {
+        if (userService.existsByUsername(request.username())) {
             throw new UsernameAlreadyExistsException("Имя пользователя '" + request.username() + "' занято");
         }
 
@@ -40,14 +40,15 @@ public class AuthService {
                 passwordEncoder.encode(request.password()),
                 Set.of(Role.USER)
         );
-        userRepository.save(user);
+        userService.createUser(user);
         return new AuthResponse("Пользователь успешно зарегистрирован");
     }
 
     public AuthResponse login(AuthRequest request) {
-        return userRepository.findByUsername(request.username())
-                .filter(user -> passwordEncoder.matches(request.password(), user.getPassword()))
-                .map(user -> new AuthResponse(jwtUtil.generateToken(user)))
-                .orElseThrow(() -> new InvalidCredentialsException("Неверное имя пользователя или пароль"));
+        var user = userService.findByUsername(request.username());
+        if (user == null || !passwordEncoder.matches(request.password(), user.getPassword())) {
+            throw new InvalidCredentialsException("Неверное имя пользователя или пароль");
+        }
+        return new AuthResponse(jwtUtil.generateToken(user));
     }
 }
