@@ -22,11 +22,11 @@ public class BookRepositoryTest {
     @Test
     @DisplayName("Должен сохранять и находить книгу по ID")
     void shouldSaveAndFindBookById() {
-        var book = createTestBook("Фаренгейт 451", "Рэй Брэдбери", Genre.DYSTOPIAN);
+        var book = createTestBook("451 градус по фаренгейту", "Рэй Брэдбери", Genre.DYSTOPIAN);
         var savedBook = bookRepository.save(book);
         var foundBook = bookRepository.findById(savedBook.getId());
         assertFalse(foundBook.isEmpty());
-        assertThat(foundBook.get().getTitle()).isEqualTo("Фаренгейт 451");
+        assertThat(foundBook.get().getTitle()).isEqualTo("451 градус по фаренгейту");
     }
 
     @Test
@@ -49,7 +49,7 @@ public class BookRepositoryTest {
     @Test
     @DisplayName("Должен удалять книгу")
     void shouldDeleteBook() {
-        var book = createTestBook("Фаренгейт 451", "Рэй Брэдбери", Genre.DYSTOPIAN);
+        var book = createTestBook("451 градус по фаренгейту", "Рэй Брэдбери", Genre.DYSTOPIAN);
         var savedBook = bookRepository.save(book);
         bookRepository.deleteById(savedBook.getId());
         assertTrue(bookRepository.findById(savedBook.getId()).isEmpty());

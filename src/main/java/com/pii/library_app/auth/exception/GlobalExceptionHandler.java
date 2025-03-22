@@ -1,5 +1,6 @@
 package com.pii.library_app.auth.exception;
 
+import com.pii.library_app.book.exception.BookNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -24,6 +25,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Object> handleGenericException(Exception exc) {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Возникла непредвиденная ошибка");
+    }
+
+    @ExceptionHandler(BookNotFoundException.class)
+    public ResponseEntity<Object> handleBookNotFoundException(BookNotFoundException exc) {
+        return buildErrorResponse(HttpStatus.NOT_FOUND, exc.getMessage());
     }
 
     private ResponseEntity<Object> buildErrorResponse(HttpStatus status, String message) {

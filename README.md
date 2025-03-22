@@ -20,5 +20,5 @@
 
 ## 💡TODO
 
-- 
+- flyway migrations...
 - 

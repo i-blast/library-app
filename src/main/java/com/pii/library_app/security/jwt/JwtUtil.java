@@ -7,6 +7,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.util.Base64;
 import java.util.Date;
 
 @Component
@@ -19,7 +20,7 @@ public class JwtUtil {
 
     private static final long EXPIRATION_TIME = 1000 * 60 * 60;
 
-    private final SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+    private final SecretKey key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(SECRET_KEY));
 
 /*    public JwtUtil(@Value("${jwt.secret}") String secret) {
         byte[] decodedKey = Base64.getDecoder().decode(secret);

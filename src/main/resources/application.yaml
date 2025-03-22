@@ -17,9 +17,9 @@ logging:
   level:
     org.springframework.security: DEBUG
     org.springdoc: DEBUG
-#    org.hibernate: trace
-#    org.hibernate.SQL: trace
-#    org.hibernate.orm.jdbc.bind: trace
+    org.hibernate: trace
+    org.hibernate.SQL: trace
+    org.hibernate.orm.jdbc.bind: trace
 #    root: trace
 
 springdoc:
@@ -29,7 +29,3 @@ springdoc:
     operations-sorter: alpha
   api-docs:
     path: /v3/api-docs
-  info:
-    title: Library Management API
-    version: 1.0
-    description: API для управления библиотекой
