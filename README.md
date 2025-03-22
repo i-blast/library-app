@@ -1,5 +1,3 @@
-# REST API сервис для отслеживания дневной нормы калорий пользователя и учета съеденных блюд
-
 ## Технологии: Java, Spring Boot, Hibernate, PostgreSQL, Git, Maven/Gradle, JUnit, Mockito, Swagger
 
 ## Пример приложения:
