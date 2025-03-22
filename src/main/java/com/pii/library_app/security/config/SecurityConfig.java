@@ -61,6 +61,7 @@ public class SecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
                         .requestMatchers(manageBooksEndpoints()).hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/books/search").hasAnyRole(Role.roles())
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

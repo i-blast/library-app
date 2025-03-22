@@ -1,6 +1,8 @@
 package com.pii.library_app.book.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pii.library_app.book.dto.SearchBookFilterDto;
+import com.pii.library_app.book.dto.SearchBookResponseDto;
 import com.pii.library_app.book.exception.BookNotFoundException;
 import com.pii.library_app.book.model.Book;
 import com.pii.library_app.book.model.Genre;
@@ -97,7 +99,7 @@ public class BookControllerTest {
         verify(bookService, never()).createBook(any(Book.class));
     }
 
-    @Test
+/*    @Test
     @DisplayName("Получение списка всех книг - успешный сценарий")
     void shouldGetAllBooks() throws Exception {
         var books = List.of(book);
@@ -109,7 +111,7 @@ public class BookControllerTest {
                 .andExpect(jsonPath("$[0].author").value("George Orwell"));
 
         verify(bookService, times(1)).getAllBooks();
-    }
+    }*/
 
     @Test
     @DisplayName("Обновление книги - книга не найдена")
@@ -124,4 +126,78 @@ public class BookControllerTest {
 
         verify(bookService, times(1)).updateBook(eq(69L), any(Book.class));
     }
+
+    @Test
+    @DisplayName("Поиск книг - успешный сценарий")
+    void shouldSearchBooks() throws Exception {
+        var filter = new SearchBookFilterDto("1984", "George Orwell", Genre.DYSTOPIAN);
+        List<Book> books = List.of(createTestBook("1984", "George Orwell", Genre.DYSTOPIAN));
+        var response = new SearchBookResponseDto(books, books.size());
+        when(bookService.searchBooks(any(SearchBookFilterDto.class))).thenReturn(response);
+
+        mockMvc.perform(post("/books/search")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(filter)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.books[0].title").value("1984"))
+                .andExpect(jsonPath("$.books[0].author").value("George Orwell"));
+        verify(bookService, times(1)).searchBooks(any(SearchBookFilterDto.class));
+    }
+
+    @Test
+    @DisplayName("Поиск книг по названию - успешный сценарий")
+    void shouldSearchBooksByTitle() throws Exception {
+        var filter = new SearchBookFilterDto("1984", null, null);
+        List<Book> books = List.of(createTestBook("1984", "George Orwell", Genre.DYSTOPIAN));
+        var response = new SearchBookResponseDto(books, books.size());
+        when(bookService.searchBooks(any(SearchBookFilterDto.class))).thenReturn(response);
+
+        mockMvc.perform(post("/books/search")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(filter)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.books[0].title").value("1984"))
+                .andExpect(jsonPath("$.books[0].author").value("George Orwell"));
+        verify(bookService, times(1)).searchBooks(any(SearchBookFilterDto.class));
+    }
+
+    @Test
+    @DisplayName("Поиск книг по жанру - успешный сценарий")
+    void shouldSearchBooksByGenre() throws Exception {
+        var filter = new SearchBookFilterDto(null, null, Genre.DYSTOPIAN);
+        List<Book> books = List.of(createTestBook("1984", "George Orwell", Genre.DYSTOPIAN));
+        var response = new SearchBookResponseDto(books, books.size());
+        when(bookService.searchBooks(any(SearchBookFilterDto.class))).thenReturn(response);
+
+        mockMvc.perform(post("/books/search")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(filter)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.books[0].title").value("1984"))
+                .andExpect(jsonPath("$.books[0].author").value("George Orwell"));
+        verify(bookService, times(1)).searchBooks(any(SearchBookFilterDto.class));
+    }
+
+    @Test
+    @DisplayName("Поиск книг без фильтров - возвращает все книги")
+    void shouldReturnAllBooksWhenNoFilterProvided() throws Exception {
+        var filter = new SearchBookFilterDto(null, null, null);
+        List<Book> books = List.of(
+                createTestBook("1984", "George Orwell", Genre.DYSTOPIAN),
+                createTestBook("Animal Farm", "George Orwell", Genre.DYSTOPIAN)
+        );
+        var response = new SearchBookResponseDto(books, books.size());
+        when(bookService.searchBooks(any(SearchBookFilterDto.class))).thenReturn(response);
+
+        mockMvc.perform(post("/books/search")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(filter)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.books").isArray())
+                .andExpect(jsonPath("$.books.length()").value(2))
+                .andExpect(jsonPath("$.books[0].title").value("1984"))
+                .andExpect(jsonPath("$.books[1].title").value("Animal Farm"));
+        verify(bookService, times(1)).searchBooks(any(SearchBookFilterDto.class));
+    }
+
 }

@@ -1,5 +1,7 @@
 package com.pii.library_app.book.controller;
 
+import com.pii.library_app.book.dto.SearchBookFilterDto;
+import com.pii.library_app.book.dto.SearchBookResponseDto;
 import com.pii.library_app.book.model.Book;
 import com.pii.library_app.book.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,16 +10,21 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.security.Principal;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/books")
-@Tag(name = "Book", description = "API для добавления, удаления и редактирования книг")
+@Tag(name = "Book", description = "API для управления книгами")
 public class BookController {
+
+    private final Logger LOG = LoggerFactory.getLogger(BookController.class);
 
     private final BookService bookService;
 
@@ -25,7 +32,7 @@ public class BookController {
         this.bookService = bookService;
     }
 
-    @GetMapping
+/*    @GetMapping
     @Operation(
             summary = "Получение списка всех книг",
             description = "Возвращает список всех книг в библиотеке"
@@ -36,7 +43,7 @@ public class BookController {
     )
     public ResponseEntity<List<Book>> getAllBooks() {
         return ResponseEntity.ok(bookService.getAllBooks());
-    }
+    }*/
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -96,5 +103,31 @@ public class BookController {
     public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
         bookService.deleteBook(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/search")
+    @Operation(
+            summary = "Поиск книг",
+            description = "Поиск книг по названию, автору или жанру"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200", description = "Успешный поиск книг",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = SearchBookResponseDto.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400", description = "Некорректные параметры запроса"
+            )
+    })
+    public ResponseEntity<SearchBookResponseDto> searchBooks(
+            @RequestBody SearchBookFilterDto filter,
+            Principal principal
+    ) {
+        LOG.debug(
+                "➤➤➤➤➤➤➤ Пользователь '{}' ищет книги по фильтру {}",
+                Optional.ofNullable(principal).map(Principal::getName).orElse("anonymous"),
+                filter
+        );
+        return ResponseEntity.ok(bookService.searchBooks(filter));
     }
 }

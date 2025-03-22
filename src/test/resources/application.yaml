@@ -22,8 +22,10 @@ spring:
   h2:
     console:
       enabled: true
-#logging:
-#  level:
+
+logging:
+  level:
+    org.springframework.security: DEBUG
 #    org.hibernate: trace
 #    org.hibernate.SQL: trace
 #    org.hibernate.orm.jdbc.bind: trace
