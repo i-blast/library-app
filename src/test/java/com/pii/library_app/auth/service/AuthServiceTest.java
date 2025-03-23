@@ -47,6 +47,11 @@ class AuthServiceTest {
         verify(userService, times(1)).existsByUsername("newUser");
         verify(passwordEncoder, times(1)).encode("securePassword");
         verify(userService, times(1)).createUser(any(User.class));
+        verify(userService, times(1)).createUser(argThat(user ->
+                user.getUsername().equals("newUser") &&
+                        user.getPassword().equals("encodedPassword") &&
+                        user.getRoles().contains(Role.USER)
+        ));
     }
 
     @Test
@@ -111,5 +116,23 @@ class AuthServiceTest {
         verify(userService, times(1)).findByUsername("validUser");
         verify(passwordEncoder, times(1)).matches("wrongPassword", "encodedPassword");
         verify(jwtUtil, never()).generateToken(user);
+    }
+
+    @Test
+    @DisplayName("Должен выбросить исключение при регистрации с пустым именем")
+    void shouldThrowExceptionWhenRegisteringWithEmptyUsername() {
+        var request = createTestAuthRequest("", "password");
+        assertThatThrownBy(() -> authService.register(request))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessageContaining("Имя пользователя не может быть пустым");
+    }
+
+    @Test
+    @DisplayName("Должен выбросить исключение при входе с пустым паролем")
+    void shouldThrowExceptionWhenLoggingInWithEmptyPassword() {
+        var request = createTestAuthRequest("validUser", "");
+        assertThatThrownBy(() -> authService.login(request))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessage("Неверное имя пользователя или пароль");
     }
 }

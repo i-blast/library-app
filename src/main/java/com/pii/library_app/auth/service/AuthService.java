@@ -31,6 +31,9 @@ public class AuthService {
     }
 
     public AuthResponse register(AuthRequest request) {
+        if (request.username() == null || request.username().isEmpty()) {
+            throw new InvalidCredentialsException("Имя пользователя не может быть пустым");
+        }
         if (userService.existsByUsername(request.username())) {
             throw new UsernameAlreadyExistsException("Имя пользователя '" + request.username() + "' занято");
         }
