@@ -50,7 +50,15 @@ public class BookController {
                     responseCode = "403", description = "Доступ запрещен. Требуется роль ADMIN."
             )
     })
-    public ResponseEntity<Book> createBook(@RequestBody Book book) {
+    public ResponseEntity<Book> createBook(
+            @RequestBody Book book,
+            Principal principal
+    ) {
+        LOG.debug(
+                "\"➤➤➤➤➤➤➤ Пользователь {} добавляет книгу: {}",
+                Optional.ofNullable(principal).map(Principal::getName).orElse("anonymous"),
+                book.getTitle()
+        );
         return ResponseEntity.ok(bookService.createBook(book));
     }
 
@@ -73,8 +81,14 @@ public class BookController {
     })
     public ResponseEntity<Book> updateBook(
             @PathVariable Long id,
-            @RequestBody Book book
+            @RequestBody Book book,
+            Principal principal
     ) {
+        LOG.debug(
+                "\"➤➤➤➤➤➤➤ Пользователь {} обновляет книгу c id: {}",
+                Optional.ofNullable(principal).map(Principal::getName).orElse("anonymous"),
+                id
+        );
         return ResponseEntity.ok(bookService.updateBook(id, book));
     }
 
@@ -89,7 +103,15 @@ public class BookController {
             @ApiResponse(responseCode = "403", description = "Доступ запрещен. Требуется роль ADMIN."),
             @ApiResponse(responseCode = "404", description = "Книга не найдена")
     })
-    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteBook(
+            @PathVariable Long id,
+            Principal principal
+    ) {
+        LOG.debug(
+                "\"➤➤➤➤➤➤➤ Пользователь {} удаляет книгу с id: {}",
+                Optional.ofNullable(principal).map(Principal::getName).orElse("anonymous"),
+                id
+        );
         bookService.deleteBook(id);
         return ResponseEntity.noContent().build();
     }
@@ -144,6 +166,11 @@ public class BookController {
             @PathVariable Long bookId,
             Principal principal
     ) {
+        LOG.debug(
+                "\"➤➤➤➤➤➤➤ Пользователь {} бронирует книгу с id: {}",
+                Optional.ofNullable(principal).map(Principal::getName).orElse("anonymous"),
+                bookId
+        );
         var borrowedBook = bookService.borrowBook(bookId, principal.getName());
         return ResponseEntity.ok(BorrowedBookDto.fromEntity(borrowedBook));
     }
@@ -167,6 +194,11 @@ public class BookController {
             @PathVariable Long bookId,
             Principal principal
     ) {
+        LOG.debug(
+                "\"➤➤➤➤➤➤➤ Пользователь {} возвращает книгу с id: {}",
+                principal.getName(),
+                bookId
+        );
         var returnedBook = bookService.returnBook(bookId, principal.getName());
         return ResponseEntity.ok(ReturnedBookDto.fromEntity(returnedBook));
     }

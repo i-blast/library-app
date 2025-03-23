@@ -79,14 +79,12 @@ public class BookControllerTest {
     @DisplayName("Обновление книги - успешный сценарий")
     void shouldUpdateBook() throws Exception {
         when(bookService.updateBook(eq(1L), any(Book.class))).thenReturn(book);
-
         mockMvc.perform(put("/books/1")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(book)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("1984"))
                 .andExpect(jsonPath("$.author").value("George Orwell"));
-
         verify(bookService, times(1)).updateBook(eq(1L), any(Book.class));
     }
 
@@ -94,10 +92,8 @@ public class BookControllerTest {
     @DisplayName("Удаление книги - успешный сценарий")
     void shouldDeleteBook() throws Exception {
         doNothing().when(bookService).deleteBook(1L);
-
         mockMvc.perform(delete("/books/1"))
                 .andExpect(status().isNoContent());
-
         verify(bookService, times(1)).deleteBook(1L);
     }
 
@@ -117,12 +113,10 @@ public class BookControllerTest {
     void shouldReturnNotFoundWhenUpdatingNonExistentBook() throws Exception {
         when(bookService.updateBook(eq(69L), any(Book.class)))
                 .thenThrow(new BookNotFoundException(69L));
-
         mockMvc.perform(put("/books/69")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(book)))
                 .andExpect(status().isNotFound());
-
         verify(bookService, times(1)).updateBook(eq(69L), any(Book.class));
     }
 
@@ -133,7 +127,6 @@ public class BookControllerTest {
         List<Book> books = List.of(createTestBook("1984", "George Orwell", Genre.DYSTOPIAN));
         var response = new SearchBookResponseDto(books, books.size());
         when(bookService.searchBooks(any(SearchBookFilterDto.class))).thenReturn(response);
-
         mockMvc.perform(post("/books/search")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(filter)))
@@ -150,7 +143,6 @@ public class BookControllerTest {
         List<Book> books = List.of(createTestBook("1984", "George Orwell", Genre.DYSTOPIAN));
         var response = new SearchBookResponseDto(books, books.size());
         when(bookService.searchBooks(any(SearchBookFilterDto.class))).thenReturn(response);
-
         mockMvc.perform(post("/books/search")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(filter)))
@@ -167,7 +159,6 @@ public class BookControllerTest {
         List<Book> books = List.of(createTestBook("1984", "George Orwell", Genre.DYSTOPIAN));
         var response = new SearchBookResponseDto(books, books.size());
         when(bookService.searchBooks(any(SearchBookFilterDto.class))).thenReturn(response);
-
         mockMvc.perform(post("/books/search")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(filter)))
@@ -187,7 +178,6 @@ public class BookControllerTest {
         );
         var response = new SearchBookResponseDto(books, books.size());
         when(bookService.searchBooks(any(SearchBookFilterDto.class))).thenReturn(response);
-
         mockMvc.perform(post("/books/search")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(filter)))
@@ -203,7 +193,6 @@ public class BookControllerTest {
     @DisplayName("Бронирование книги - успешный сценарий")
     void shouldBorrowBookSuccessfully() throws Exception {
         when(bookService.borrowBook(eq(1L), any(String.class))).thenReturn(borrowedBook);
-
         mockMvc.perform(post("/books/1/borrow").principal(() -> "testUser"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
@@ -221,7 +210,6 @@ public class BookControllerTest {
         var username = "testUser";
         when(bookService.returnBook(eq(bookId), eq(username)))
                 .thenThrow(new BookNotFoundException(bookId));
-
         mockMvc.perform(post("/books/{bookId}/return", bookId).principal(() -> username))
                 .andDo(print())
                 .andExpect(status().isNotFound());
@@ -233,7 +221,6 @@ public class BookControllerTest {
     void shouldReturnBadRequestWhenBookNotAvailable() throws Exception {
         when(bookService.borrowBook(eq(1L), any(String.class)))
                 .thenThrow(new BookNotAvailableException(1L));
-
         mockMvc.perform(post("/books/1/borrow")
                         .principal(() -> "testUser"))
                 .andExpect(status().isConflict());
@@ -245,7 +232,6 @@ public class BookControllerTest {
     void shouldReturnBookSuccessfully() throws Exception {
         borrowedBook.setReturnedAt(LocalDateTime.of(2025, 3, 22, 15, 30));
         when(bookService.returnBook(eq(1L), eq("testUser"))).thenReturn(borrowedBook);
-
         mockMvc.perform(post("/books/1/return").principal(() -> "testUser"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
@@ -261,7 +247,6 @@ public class BookControllerTest {
     void shouldReturnNotFoundWhenBorrowedBookNotFound() throws Exception {
         when(bookService.returnBook(eq(1L), eq("testUser")))
                 .thenThrow(new BookNotFoundException(1L));
-
         mockMvc.perform(post("/books/{id}/return", 1L).principal(() -> "testUser"))
                 .andExpect(status().isNotFound());
         verify(bookService, times(1)).returnBook(eq(1L), eq("testUser"));
@@ -273,7 +258,6 @@ public class BookControllerTest {
         var bookId = 1L;
         var username = "testUser";
         when(bookService.returnBook(eq(bookId), eq(username))).thenThrow(new BookNotBorrowedException(bookId));
-
         mockMvc.perform(post("/books/{bookId}/return", bookId).principal(() -> username))
                 .andExpect(status().isBadRequest());
         verify(bookService, times(1)).returnBook(eq(bookId), eq(username));
