@@ -36,7 +36,8 @@ public class AuthController {
             description = "Создаёт нового пользователя в системе",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Пользователь успешно зарегистрирован"),
-                    @ApiResponse(responseCode = "400", description = "Некорректные данные пользователя")
+                    @ApiResponse(responseCode = "401", description = "Некорректные данные пользователя"),
+                    @ApiResponse(responseCode = "409", description = "Имя пользователя уже занято")
             }
     )
     public ResponseEntity<AuthResponse> register(
@@ -57,7 +58,7 @@ public class AuthController {
             description = "Проверяет учётные данные пользователя и возвращает результат",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Успешная аутентификация"),
-                    @ApiResponse(responseCode = "401", description = "Неверные учётные данные")
+                    @ApiResponse(responseCode = "401", description = "Неверное имя пользователя или пароль")
             }
     )
     public ResponseEntity<AuthResponse> login(

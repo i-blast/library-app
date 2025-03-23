@@ -75,7 +75,7 @@ public class BookController {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Book.class))),
             @ApiResponse(
                     responseCode = "403",
-                    description = "Доступ запрещен. Требуется роль ADMIN."
+                    description = "Доступ запрещен. Требуется роль ADMIN"
             ),
             @ApiResponse(responseCode = "404", description = "Книга не найдена")
     })
@@ -149,19 +149,21 @@ public class BookController {
             summary = "Забронировать книгу",
             description = "Позволяет пользователю забронировать книгу по её ID"
     )
-    @ApiResponse(
-            responseCode = "200",
-            description = "Книга успешно забронирована",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = BorrowedBookDto.class))
-    )
-    @ApiResponse(
-            responseCode = "404",
-            description = "Книга не найдена"
-    )
-    @ApiResponse(
-            responseCode = "400",
-            description = "Книга недоступна для бронирования"
-    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Книга успешно забронирована",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = BorrowedBookDto.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Книга недоступна для бронирования"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Книга не найдена"
+            )
+    })
     public ResponseEntity<BorrowedBookDto> borrowBook(
             @PathVariable Long bookId,
             Principal principal

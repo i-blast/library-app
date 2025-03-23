@@ -44,8 +44,8 @@ public class UserActivityLogController {
                     )
             ),
             @ApiResponse(responseCode = "400", description = "Некорректный запрос"),
-            @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
-            @ApiResponse(responseCode = "500", description = "Ошибка сервера")
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен. Требуется роль ADMIN"),
+            @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     })
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/last24h")
