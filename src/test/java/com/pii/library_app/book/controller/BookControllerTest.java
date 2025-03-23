@@ -1,6 +1,7 @@
 package com.pii.library_app.book.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pii.library_app.book.dto.CreateBookDto;
 import com.pii.library_app.book.dto.SearchBookFilterDto;
 import com.pii.library_app.book.dto.SearchBookResponseDto;
 import com.pii.library_app.book.exception.BookNotAvailableException;
@@ -65,27 +66,27 @@ public class BookControllerTest {
     @Test
     @DisplayName("Создание книги - успешный сценарий")
     void shouldCreateBook() throws Exception {
-        when(bookService.createBook(any(Book.class))).thenReturn(book);
+        when(bookService.createBook(any(CreateBookDto.class))).thenReturn(book);
         mockMvc.perform(post("/books")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(book)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("1984"))
                 .andExpect(jsonPath("$.author").value("George Orwell"));
-        verify(bookService, times(1)).createBook(any(Book.class));
+        verify(bookService, times(1)).createBook(any(CreateBookDto.class));
     }
 
     @Test
     @DisplayName("Обновление книги - успешный сценарий")
     void shouldUpdateBook() throws Exception {
-        when(bookService.updateBook(eq(1L), any(Book.class))).thenReturn(book);
+        when(bookService.updateBook(eq(1L), any(CreateBookDto.class))).thenReturn(book);
         mockMvc.perform(put("/books/1")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(book)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("1984"))
                 .andExpect(jsonPath("$.author").value("George Orwell"));
-        verify(bookService, times(1)).updateBook(eq(1L), any(Book.class));
+        verify(bookService, times(1)).updateBook(eq(1L), any(CreateBookDto.class));
     }
 
     @Test
@@ -105,19 +106,19 @@ public class BookControllerTest {
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(book)))
                 .andExpect(status().isForbidden());
-        verify(bookService, never()).createBook(any(Book.class));
+        verify(bookService, never()).createBook(any(CreateBookDto.class));
     }
 
     @Test
     @DisplayName("Обновление книги - книга не найдена")
     void shouldReturnNotFoundWhenUpdatingNonExistentBook() throws Exception {
-        when(bookService.updateBook(eq(69L), any(Book.class)))
+        when(bookService.updateBook(eq(69L), any(CreateBookDto.class)))
                 .thenThrow(new BookNotFoundException(69L));
         mockMvc.perform(put("/books/69")
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(book)))
                 .andExpect(status().isNotFound());
-        verify(bookService, times(1)).updateBook(eq(69L), any(Book.class));
+        verify(bookService, times(1)).updateBook(eq(69L), any(CreateBookDto.class));
     }
 
     @Test

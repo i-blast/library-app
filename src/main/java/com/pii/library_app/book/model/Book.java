@@ -1,33 +1,26 @@
 package com.pii.library_app.book.model;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 
 @Entity
 @Table(name = "books")
-@Schema(description = "Модель книги")
 public class Book {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Schema(description = "Идентификатор книги", example = "1")
     private Long id;
 
     @Column(nullable = false)
-    @Schema(description = "Название книги", example = "The Art of Multiprocessor Programming")
     private String title;
 
     @Column(nullable = false)
-    @Schema(description = "Автор книги", example = "Maurice Herlihy, Nir Shavit, Victor Luchangco, Michael Spear")
     private String author;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    @Schema(description = "Жанр книги", example = "PROGRAMMING")
     private Genre genre;
 
     @Column(nullable = false)
-    @Schema(description = "Доступность книги для бронирования", example = "true")
     private boolean available = true;
 
     public Book() {}

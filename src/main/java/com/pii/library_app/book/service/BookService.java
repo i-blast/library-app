@@ -1,5 +1,6 @@
 package com.pii.library_app.book.service;
 
+import com.pii.library_app.book.dto.CreateBookDto;
 import com.pii.library_app.book.dto.SearchBookFilterDto;
 import com.pii.library_app.book.dto.SearchBookResponseDto;
 import com.pii.library_app.book.exception.BookNotAvailableException;
@@ -38,21 +39,21 @@ public class BookService {
     }
 
     @Transactional
-    public Book createBook(Book book) {
-        return bookRepository.save(book);
+    public Book createBook(CreateBookDto dto) {
+        return bookRepository.save(dto.toBook());
     }
 
     @Transactional
-    public Book updateBook(Long id, Book updatedBook) {
-        return bookRepository.findById(id)
-                .map(existingBook -> {
-                    existingBook.setTitle(updatedBook.getTitle());
-                    existingBook.setAuthor(updatedBook.getAuthor());
-                    existingBook.setGenre(updatedBook.getGenre());
-                    existingBook.setAvailable(updatedBook.isAvailable());
-                    return bookRepository.save(existingBook);
-                })
-                .orElseThrow(() -> new BookNotFoundException(id));
+    public Book updateBook(Long id, CreateBookDto dto) {
+        var foundResult = bookRepository.findById(id);
+        if (foundResult.isEmpty()) {
+            throw new BookNotFoundException(id);
+        }
+        var existingBook = foundResult.get();
+        existingBook.setTitle(dto.title());
+        existingBook.setAuthor(dto.author());
+        existingBook.setGenre(dto.genre());
+        return bookRepository.save(existingBook);
     }
 
     @Transactional

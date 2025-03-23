@@ -1,5 +1,6 @@
 package com.pii.library_app.book.service;
 
+import com.pii.library_app.book.dto.CreateBookDto;
 import com.pii.library_app.book.dto.SearchBookFilterDto;
 import com.pii.library_app.book.exception.BookNotAvailableException;
 import com.pii.library_app.book.exception.BookNotBorrowedException;
@@ -13,9 +14,11 @@ import com.pii.library_app.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
@@ -29,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class BookServiceTest {
 
     @Mock
@@ -42,7 +46,6 @@ public class BookServiceTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
     }
 
     @Test
@@ -51,12 +54,12 @@ public class BookServiceTest {
         var book = createTestBook("451 градус по фаренгейту", "Рэй Брэдбери", Genre.DYSTOPIAN);
         when(bookRepository.save(any(Book.class))).thenReturn(book);
 
-        var savedBook = bookService.createBook(book);
+        var savedBook = bookService.createBook(new CreateBookDto("451 градус по фаренгейту", "Рэй Брэдбери", Genre.DYSTOPIAN));
         assertThat(savedBook).isNotNull();
         assertThat(savedBook.getTitle()).isEqualTo("451 градус по фаренгейту");
         assertThat(savedBook.getAuthor()).isEqualTo("Рэй Брэдбери");
         assertThat(savedBook.getGenre()).isEqualTo(Genre.DYSTOPIAN);
-        verify(bookRepository, times(1)).save(book);
+        verify(bookRepository, times(1)).save(any(Book.class));
     }
 
     @Test
@@ -70,7 +73,7 @@ public class BookServiceTest {
         when(bookRepository.findById(1L)).thenReturn(Optional.of(existingBook));
         when(bookRepository.save(any(Book.class))).thenReturn(updatedBook);
 
-        var result = bookService.updateBook(1L, updatedBook);
+        var result = bookService.updateBook(1L, new CreateBookDto("451 градус по фаренгейту", "Рэй Брэдбери", Genre.DYSTOPIAN));
         assertThat(result.getTitle()).isEqualTo("451 градус по фаренгейту");
         assertThat(result.getAuthor()).isEqualTo("Рэй Брэдбери");
         assertThat(result.getGenre()).isEqualTo(Genre.DYSTOPIAN);
@@ -82,7 +85,7 @@ public class BookServiceTest {
     void shouldThrowExceptionWhenUpdatingNonExistentBook() {
         when(bookRepository.findById(1L)).thenReturn(Optional.empty());
         var exception = assertThrows(BookNotFoundException.class, () -> {
-            bookService.updateBook(1L, createTestBook("451 градус по фаренгейту", "Рэй Брэдбери", Genre.DYSTOPIAN));
+            bookService.updateBook(1L, new CreateBookDto("451 градус по фаренгейту", "Рэй Брэдбери", Genre.DYSTOPIAN));
         });
         assertThat(exception.getMessage()).isEqualTo("Книга с ID 1 не найдена");
     }

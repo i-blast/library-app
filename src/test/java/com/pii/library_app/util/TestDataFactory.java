@@ -1,6 +1,7 @@
 package com.pii.library_app.util;
 
 import com.pii.library_app.auth.dto.AuthRequest;
+import com.pii.library_app.book.dto.CreateBookDto;
 import com.pii.library_app.book.model.Book;
 import com.pii.library_app.book.model.BorrowedBook;
 import com.pii.library_app.book.model.Genre;

@@ -1,9 +1,6 @@
 package com.pii.library_app.book.controller;
 
-import com.pii.library_app.book.dto.BorrowedBookDto;
-import com.pii.library_app.book.dto.ReturnedBookDto;
-import com.pii.library_app.book.dto.SearchBookFilterDto;
-import com.pii.library_app.book.dto.SearchBookResponseDto;
+import com.pii.library_app.book.dto.*;
 import com.pii.library_app.book.model.Book;
 import com.pii.library_app.book.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -51,13 +48,13 @@ public class BookController {
             )
     })
     public ResponseEntity<Book> createBook(
-            @RequestBody Book book,
+            @RequestBody CreateBookDto book,
             Principal principal
     ) {
         LOG.debug(
                 "\"➤➤➤➤➤➤➤ Пользователь {} добавляет книгу: {}",
                 Optional.ofNullable(principal).map(Principal::getName).orElse("anonymous"),
-                book.getTitle()
+                book.title()
         );
         return ResponseEntity.ok(bookService.createBook(book));
     }
@@ -81,7 +78,7 @@ public class BookController {
     })
     public ResponseEntity<Book> updateBook(
             @PathVariable Long id,
-            @RequestBody Book book,
+            @RequestBody CreateBookDto book,
             Principal principal
     ) {
         LOG.debug(
