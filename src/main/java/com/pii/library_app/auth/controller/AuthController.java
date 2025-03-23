@@ -6,16 +6,23 @@ import com.pii.library_app.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.security.Principal;
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "Authentication", description = "API для регистрации и аутентификации пользователей")
 public class AuthController {
+
+    private final Logger LOG = LoggerFactory.getLogger(AuthController.class);
 
     private final AuthService authService;
 
@@ -32,7 +39,15 @@ public class AuthController {
                     @ApiResponse(responseCode = "400", description = "Некорректные данные пользователя")
             }
     )
-    public ResponseEntity<AuthResponse> register(@RequestBody AuthRequest request) {
+    public ResponseEntity<AuthResponse> register(
+            @RequestBody AuthRequest request,
+            Principal principal
+    ) {
+        LOG.debug(
+                "\"➤➤➤➤➤➤➤ {} регистрирует пользователя: {}",
+                Optional.ofNullable(principal).map(Principal::getName).orElse("anonymous"),
+                request
+        );
         return ResponseEntity.ok(authService.register(request));
     }
 
@@ -45,7 +60,15 @@ public class AuthController {
                     @ApiResponse(responseCode = "401", description = "Неверные учётные данные")
             }
     )
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
+    public ResponseEntity<AuthResponse> login(
+            @RequestBody AuthRequest request,
+            Principal principal
+    ) {
+        LOG.debug(
+                "\"➤➤➤➤➤➤➤ {} пытается войти по данным: {}",
+                Optional.ofNullable(principal).map(Principal::getName).orElse("anonymous"),
+                request
+        );
         return ResponseEntity.ok(authService.login(request));
     }
 }
