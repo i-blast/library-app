@@ -60,6 +60,7 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/logs/**").hasRole("ADMIN")
                         .requestMatchers(manageBooksEndpoints()).hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/books/search").hasAnyRole(Role.roles())
                         .anyRequest().authenticated()
