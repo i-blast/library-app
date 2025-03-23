@@ -4,6 +4,7 @@ import com.pii.library_app.auth.dto.AuthRequest;
 import com.pii.library_app.book.model.Book;
 import com.pii.library_app.book.model.BorrowedBook;
 import com.pii.library_app.book.model.Genre;
+import com.pii.library_app.logging.model.UserActivityLog;
 import com.pii.library_app.user.model.User;
 
 import java.time.LocalDateTime;
@@ -40,4 +41,11 @@ public final class TestDataFactory {
         return new AuthRequest(username, password);
     }
 
+    public static UserActivityLog createTestActivityLog(
+            Long userId,
+            String action,
+            String endpoint
+    ) {
+        return new UserActivityLog(userId, action, endpoint);
+    }
 }
