@@ -1,33 +1,29 @@
 package com.pii.library_app.security.jwt;
 
-import com.pii.library_app.user.model.Role;
 import com.pii.library_app.user.model.User;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
-import java.util.*;
+import java.util.Base64;
+import java.util.Date;
 import java.util.stream.Collectors;
 
 @Component
 public class JwtUtil {
 
-    /**
-     * TODO перенести в env
-     */
-    private static final String SECRET_KEY = "Y/aQcRmTIvybqtIqEfR4KhpqzlKQit+/Yi6igVW1dLg=";
-
     private static final long EXPIRATION_TIME = 1000 * 60 * 60;
 
-    private final SecretKey key = Keys.hmacShaKeyFor(Base64.getDecoder().decode(SECRET_KEY));
+    private final SecretKey key ;
 
-/*    public JwtUtil(@Value("${jwt.secret}") String secret) {
+    public JwtUtil(@Value("${JWT_SECRET_KEY}") String secret) {
         byte[] decodedKey = Base64.getDecoder().decode(secret);
         this.key = Keys.hmacShaKeyFor(decodedKey);
-    }*/
+    }
 
     public String generateToken(User user) {
         return Jwts.builder()
