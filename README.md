@@ -11,9 +11,9 @@
 ## 💻 Инструкция для запуска
 
 - Requirements: JDK 21, Gradle 8.13, Docker Compose v2.33
-- Собрать Spring Boot приложение с помощью ./gradlew build
 - Запустить сервис БД с помощью docker-compose up
-- Запустить приложение с помощью ./gradlew bootRun
+- Запустить приложение (powershell)
+```$env:JWT_SECRET_KEY="secret_key"; java -jar library-app-0.0.1-SNAPSHOT.jar```
 - OpenAPI документация доступна по адресу http://localhost:8085/swagger-ui.html
 - 
 
