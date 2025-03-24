@@ -1,0 +1,15 @@
+meta:
+  environment: jvm
+  toolchain:
+    name: gradle
+    version: 17
+
+#build:
+#  artifacts:
+#    "build/libs/*.jar": /
+#  args: ./gradlew build
+
+run:
+  jarName: library-app-0.0.1-SNAPSHOT.jar
+#  persistentMount: /data
+  containerPort: 8085

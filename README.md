@@ -10,7 +10,7 @@
 
 ## 💻 Инструкция для запуска
 
-- Requirements: JDK 21, Gradle 8.13, Docker Compose v2.33
+- Requirements: JDK 17, Gradle 7.6.4, Docker Compose v2.33
 - Собрать Spring Boot приложение с помощью ./gradlew build
 - Запустить сервис БД с помощью docker-compose up
 - Запустить приложение с помощью ./gradlew bootRun
